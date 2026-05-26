@@ -5,6 +5,8 @@ as the sprints progress (see docs/03_Project_Plan.docx Section 5).
 """
 
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,12 +23,27 @@ logging.basicConfig(
 )
 log = logging.getLogger("luminary")
 
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """Startup / shutdown hooks for the app.
+
+    Uses the modern lifespan pattern (FastAPI >= 0.93). Anything that needs
+    to run once at boot (DB connection check, warm caches) goes before the
+    `yield`; anything that needs to run on shutdown goes after.
+    """
+    log.info("Luminary backend starting (env=%s)", settings.APP_ENV)
+    yield
+    log.info("Luminary backend shutting down")
+
+
 app = FastAPI(
     title=settings.APP_NAME,
     version=__version__,
     description="AI-powered cross-media recommendation assistant for books, articles, and movies.",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -39,13 +56,3 @@ app.add_middleware(
 
 # Routers (feature routers will be added here as they land)
 app.include_router(health_router, prefix="/api", tags=["health"])
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    log.info("Luminary backend starting (env=%s)", settings.APP_ENV)
-
-
-@app.on_event("shutdown")
-def on_shutdown() -> None:
-    log.info("Luminary backend shutting down")
