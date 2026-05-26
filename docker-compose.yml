@@ -1,0 +1,31 @@
+# Local development environment for Luminary.
+# Spins up PostgreSQL 16 with the pgvector extension preinstalled.
+# Usage:
+#   docker compose up -d           # start in background
+#   docker compose logs -f db      # follow DB logs
+#   docker compose down            # stop containers
+#   docker compose down -v         # stop and delete the volume (resets DB)
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: luminary-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: luminary
+      POSTGRES_PASSWORD: luminary_dev_only
+      POSTGRES_DB: luminary
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U luminary -d luminary"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+    name: luminary_postgres_data
