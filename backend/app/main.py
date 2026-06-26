@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
+from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.core.config import get_settings
 
@@ -56,3 +57,4 @@ app.add_middleware(
 
 # Routers (feature routers will be added here as they land)
 app.include_router(health_router, prefix="/api", tags=["health"])
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
