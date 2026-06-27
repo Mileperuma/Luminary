@@ -4,7 +4,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
+import OnboardingPage from "./pages/OnboardingPage";
 import RegisterPage from "./pages/RegisterPage";
+import SectionPage from "./pages/SectionPage";
+import SettingsPage from "./pages/SettingsPage";
 
 export default function App() {
   return (
@@ -17,6 +20,58 @@ export default function App() {
         element={
           <ProtectedRoute>
             <HomePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <OnboardingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/books"
+        element={
+          <ProtectedRoute>
+            <SectionPage
+              mediaType="book"
+              heading="Books"
+              subline="Tell me what to read next."
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/articles"
+        element={
+          <ProtectedRoute>
+            <SectionPage
+              mediaType="article"
+              heading="Articles"
+              subline="A long read worth your time."
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/movies"
+        element={
+          <ProtectedRoute>
+            <SectionPage
+              mediaType="movie"
+              heading="Movies"
+              subline="One pick with a trailer."
+            />
           </ProtectedRoute>
         }
       />

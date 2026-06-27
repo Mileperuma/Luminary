@@ -13,7 +13,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api.auth import router as auth_router
+from app.api.chat import router as chat_router
 from app.api.health import router as health_router
+from app.api.preferences import router as preferences_router
+from app.api.recommendations import router as recommendations_router
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -58,3 +61,6 @@ app.add_middleware(
 # Routers (feature routers will be added here as they land)
 app.include_router(health_router, prefix="/api", tags=["health"])
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
+app.include_router(preferences_router, prefix="/api/preferences", tags=["preferences"])
+app.include_router(recommendations_router, prefix="/api/recommendations", tags=["recommendations"])
