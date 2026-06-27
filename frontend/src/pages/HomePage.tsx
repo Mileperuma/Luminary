@@ -1,6 +1,9 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
+import { fetchWelcome } from "../lib/memory";
+import type { WelcomePayload } from "../lib/memory";
 
 const SECTIONS = [
   { label: "Books", path: "/books", description: "One pick + four close reads." },
@@ -8,9 +11,36 @@ const SECTIONS = [
   { label: "Movies", path: "/movies", description: "Pick + trailer + similar films." },
 ];
 
+const MEDIA_TO_PATH: Record<string, string> = {
+  book: "/books",
+  movie: "/movies",
+  article: "/articles",
+};
+
 export default function HomePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [welcome, setWelcome] = useState<WelcomePayload | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const data = await fetchWelcome();
+        if (!cancelled) setWelcome(data);
+      } catch {
+        // Non-fatal — fall back to the static greeting below.
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const greeting = welcome?.greeting ?? `Welcome, ${user?.display_name}.`;
+  const needsOnboarding = welcome?.needs_onboarding ?? !user?.onboarding_complete;
+  const freshPicks = welcome?.fresh_picks ?? [];
 
   return (
     <main className="min-h-screen bg-cream text-ink">
@@ -30,12 +60,10 @@ export default function HomePage() {
       </header>
 
       <section className="max-w-3xl mx-auto px-6 py-16">
-        <h1 className="font-serif text-3xl mb-2 text-center">
-          Welcome, {user?.display_name}.
-        </h1>
+        <h1 className="font-serif text-3xl mb-2 text-center">{greeting}</h1>
         <p className="text-muted text-center mb-12">What are you in the mood for?</p>
 
-        {user && !user.onboarding_complete && (
+        {needsOnboarding && (
           <div className="mb-10 p-4 border border-line rounded-lg bg-card flex items-center justify-between">
             <div>
               <p className="font-medium">Tell Luminary what you like.</p>
@@ -48,6 +76,34 @@ export default function HomePage() {
               Start chat
             </Link>
           </div>
+        )}
+
+        {freshPicks.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-sm uppercase tracking-wide text-muted mb-3">Recent picks</h2>
+            <ul className="grid md:grid-cols-3 gap-4 list-none p-0">
+              {freshPicks.map((pick) => (
+                <li key={pick.id}>
+                  <Link
+                    to={MEDIA_TO_PATH[pick.media_type] ?? "/home"}
+                    className="block bg-card border border-line rounded-lg overflow-hidden no-underline text-ink hover:border-ink"
+                  >
+                    {pick.image_url ? (
+                      <img src={pick.image_url} alt="" className="w-full aspect-video object-cover" />
+                    ) : (
+                      <div className="w-full aspect-video bg-line/30" />
+                    )}
+                    <div className="p-3">
+                      <p className="text-xs uppercase tracking-wide text-muted">
+                        {pick.media_type}
+                      </p>
+                      <p className="font-medium text-sm">{pick.title}</p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         <ul className="grid md:grid-cols-3 gap-4 list-none p-0">
