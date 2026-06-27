@@ -22,4 +22,6 @@ COPY app ./app
 EXPOSE 8000
 
 # Render injects $PORT; default to 8000 locally.
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Migrations run automatically on container start so a deploy never lands on
+# an out-of-date schema.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

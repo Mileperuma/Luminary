@@ -1,0 +1,65 @@
+# Render Blueprint — describes the production stack.
+# Apply by clicking "New +" -> "Blueprint" in the Render dashboard and pointing
+# at this repository. Render will create the database and web service for you.
+#
+# Secret env vars (LLM keys, external API keys) must be filled in via the
+# Render dashboard after the first deploy — they are intentionally not in
+# this file.
+
+databases:
+  - name: luminary-db
+    plan: free
+    databaseName: luminary
+    user: luminary
+
+services:
+  - type: web
+    name: luminary-backend
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+
+      - key: DATABASE_URL
+        fromDatabase:
+          name: luminary-db
+          property: connectionString
+
+      # Auth
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRES_MINUTES
+        value: "60"
+
+      # CORS — point at your Vercel deployment.
+      - key: CORS_ORIGINS
+        value: https://luminary.vercel.app
+
+      # Token budget for the LLM adapter
+      - key: LLM_DAILY_TOKEN_BUDGET
+        value: "200000"
+
+      # Sensitive keys — set these in the Render dashboard after first deploy.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GOOGLE_BOOKS_API_KEY
+        sync: false
+      - key: TMDB_API_KEY
+        sync: false
+      - key: OMDB_API_KEY
+        sync: false
+      - key: GUARDIAN_API_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import Button from "../components/Button";
+import FeedbackBar from "../components/FeedbackBar";
 import RecommendationCard from "../components/RecommendationCard";
 import SimilarStrip from "../components/SimilarStrip";
 import { useAuth } from "../context/AuthContext";
@@ -81,6 +82,7 @@ export default function SectionPage({ mediaType, heading, subline }: Props) {
         {rec && (
           <>
             <RecommendationCard recommendation={rec} />
+            <FeedbackBar recommendationId={rec.id} onSkip={fetchPick} />
             <SimilarStrip items={rec.similar_items} />
           </>
         )}

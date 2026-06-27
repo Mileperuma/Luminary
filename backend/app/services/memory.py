@@ -66,8 +66,13 @@ def build_summary(session: Session, *, user: User) -> MemorySummary:
     ))
 
     long_absence = False
-    if user.last_login_at:
-        gap = datetime.now(UTC) - user.last_login_at
+    last_login = user.last_login_at
+    if last_login:
+        # SQLite stores datetimes as text and returns them naive; treat any
+        # naive value as UTC so the subtraction is well-defined everywhere.
+        if last_login.tzinfo is None:
+            last_login = last_login.replace(tzinfo=UTC)
+        gap = datetime.now(UTC) - last_login
         long_absence = gap >= timedelta(days=LONG_ABSENCE_DAYS)
 
     return MemorySummary(
