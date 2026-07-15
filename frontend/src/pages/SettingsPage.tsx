@@ -4,6 +4,8 @@ import axios from "axios";
 
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
+import { fetchMe } from "../lib/auth";
+import { optInToDigest, optOutOfDigest } from "../lib/digest";
 
 interface Preference {
   id: string;
@@ -21,6 +23,23 @@ export default function SettingsPage() {
   const [prefs, setPrefs] = useState<Preference[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [digestOptIn, setDigestOptIn] = useState<boolean>(user?.digest_opt_in ?? false);
+
+  async function toggleDigest() {
+    try {
+      if (digestOptIn) {
+        await optOutOfDigest();
+        setDigestOptIn(false);
+      } else {
+        await optInToDigest();
+        setDigestOptIn(true);
+      }
+      // Refresh cached profile so the header shows the right state.
+      await fetchMe().catch(() => undefined);
+    } catch {
+      setError("Could not update your digest preference.");
+    }
+  }
 
   async function reload() {
     setLoading(true);
@@ -73,6 +92,27 @@ export default function SettingsPage() {
         <p className="text-muted mb-6">
           These are the taste signals Luminary uses to pick for you. Delete what's wrong.
         </p>
+
+        <div className="mb-8 p-4 border border-line rounded-lg bg-card flex items-center justify-between">
+          <div>
+            <p className="font-medium">Weekly digest email</p>
+            <p className="text-sm text-muted">
+              One personalised summary of your picks, every Sunday.
+            </p>
+          </div>
+          <button
+            onClick={toggleDigest}
+            aria-pressed={digestOptIn}
+            className={
+              "px-4 py-2 rounded-lg text-sm font-medium border transition-colors " +
+              (digestOptIn
+                ? "bg-ink text-cream border-ink"
+                : "bg-transparent text-ink border-line hover:border-ink")
+            }
+          >
+            {digestOptIn ? "Subscribed" : "Subscribe"}
+          </button>
+        </div>
 
         {error && (
           <p role="alert" className="text-sm text-ink bg-line/40 rounded-md px-3 py-2 mb-4">

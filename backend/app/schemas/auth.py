@@ -30,3 +30,4 @@ class UserPublic(BaseModel):
     created_at: datetime
     last_login_at: datetime | None
     onboarding_complete: bool
+    digest_opt_in: bool = False

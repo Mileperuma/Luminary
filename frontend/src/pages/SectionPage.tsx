@@ -3,9 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import Button from "../components/Button";
+import CrossMediaStrip from "../components/CrossMediaStrip";
 import FeedbackBar from "../components/FeedbackBar";
+import MoodSelector, { readPersistedMood } from "../components/MoodSelector";
 import RecommendationCard from "../components/RecommendationCard";
 import SimilarStrip from "../components/SimilarStrip";
+import type { Mood } from "../components/MoodSelector";
 import { useAuth } from "../context/AuthContext";
 import { getRecommendation } from "../lib/recommendations";
 import type { MediaType, Recommendation } from "../lib/recommendations";
@@ -23,12 +26,16 @@ export default function SectionPage({ mediaType, heading, subline }: Props) {
   const [rec, setRec] = useState<Recommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mood, setMood] = useState<Mood | null>(() => readPersistedMood());
 
   async function fetchPick() {
     setLoading(true);
     setError(null);
     try {
-      const r = await getRecommendation({ media_type: mediaType });
+      const r = await getRecommendation({
+        media_type: mediaType,
+        mood: mood ?? undefined,
+      });
       setRec(r);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.detail) {
@@ -44,7 +51,7 @@ export default function SectionPage({ mediaType, heading, subline }: Props) {
   useEffect(() => {
     void fetchPick();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mediaType]);
+  }, [mediaType, mood]);
 
   return (
     <main className="min-h-screen bg-cream text-ink">
@@ -67,6 +74,8 @@ export default function SectionPage({ mediaType, heading, subline }: Props) {
         <h1 className="font-serif text-3xl mb-2 mt-4">{heading}</h1>
         <p className="text-muted mb-8">{subline}</p>
 
+        <MoodSelector onChange={setMood} />
+
         <div className="mb-6 max-w-xs">
           <Button onClick={fetchPick} loading={loading} variant="ghost">
             Show me another
@@ -83,6 +92,7 @@ export default function SectionPage({ mediaType, heading, subline }: Props) {
           <>
             <RecommendationCard recommendation={rec} />
             <FeedbackBar recommendationId={rec.id} onSkip={fetchPick} />
+            <CrossMediaStrip recommendationId={rec.id} />
             <SimilarStrip items={rec.similar_items} />
           </>
         )}

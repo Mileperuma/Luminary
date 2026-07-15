@@ -18,6 +18,7 @@ from app.services import catalogue as _catalogue
 from app.services import llm_client as _llm_module
 from app.services.catalogue import CatalogueClient, CatalogueItem
 from app.services.llm_client import LLMClient
+from app.services.vector_memory import rank_by_similarity
 
 log = logging.getLogger("luminary.recommender")
 
@@ -114,11 +115,22 @@ def recommend(
     if not candidates:
         raise RecommendationUnavailableError(media_type)
 
-    ranked = sorted(
+    # Two-stage ranking:
+    # 1) Cheap keyword score against the user's stored preference values.
+    # 2) If a vector profile exists, re-rank the top-N by cosine similarity.
+    keyword_ranked = sorted(
         candidates,
         key=lambda item: _score_candidate(item, preferences),
         reverse=True,
     )
+    ranked = rank_by_similarity(
+        session,
+        user_id=user_id,
+        media_type=media_type,
+        candidates=keyword_ranked[:8],
+    )
+    if len(ranked) < len(keyword_ranked):
+        ranked += keyword_ranked[len(ranked):]
     primary = ranked[0]
     similar = ranked[1 : 1 + MIN_SIMILAR]
 
@@ -131,8 +143,10 @@ def recommend(
     if media_type == MediaType.MOVIE:
         trailer_url = youtube.trailer_url(title=primary.title)
 
-    # LLM explanation
+    # LLM explanation — include the active mood so the blurb references it.
     profile_summary = _summarise_profile(preferences, media_type)
+    if mood:
+        profile_summary = f"Current mood: {mood}\n{profile_summary}"
     explanation = llm.explain_recommendation(profile_summary, primary.to_dict())
 
     rec = Recommendation(

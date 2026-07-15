@@ -7,6 +7,7 @@ export interface UserPublic {
   created_at: string;
   last_login_at: string | null;
   onboarding_complete: boolean;
+  digest_opt_in: boolean;
 }
 
 export interface TokenResponse {

@@ -18,3 +18,5 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
     last_login_at: datetime | None = Field(default=None, nullable=True)
     onboarding_complete: bool = Field(default=False, nullable=False)
+    digest_opt_in: bool = Field(default=False, nullable=False)
+    last_digest_sent_at: datetime | None = Field(default=None, nullable=True)

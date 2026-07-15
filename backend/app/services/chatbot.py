@@ -118,6 +118,22 @@ def _save_captured_preferences(
         session.add(user)
 
     session.commit()
+
+    # Refresh the profile vector for every media type that changed.
+    if saved:
+        changed_media: set[MediaType] = set()
+        for r in rows:
+            try:
+                changed_media.add(MediaType(r["media_type"]))
+            except (KeyError, ValueError, TypeError):
+                continue
+        try:
+            from app.services.vector_memory import rebuild_user_embedding
+            for m in changed_media:
+                rebuild_user_embedding(session, user_id=user.id, media_type=m)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("preference vector rebuild failed: %s", exc)
+
     return saved
 
 

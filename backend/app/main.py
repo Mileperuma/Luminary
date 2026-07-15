@@ -14,12 +14,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import __version__
 from app.api.auth import router as auth_router
 from app.api.chat import router as chat_router
+from app.api.cross_media import router as cross_media_router
+from app.api.digest import router as digest_router
 from app.api.feedback import router as feedback_router
 from app.api.health import router as health_router
 from app.api.memory import router as memory_router
 from app.api.preferences import router as preferences_router
 from app.api.recommendations import router as recommendations_router
 from app.core.config import get_settings
+from app.core.scheduler import start_scheduler, stop_scheduler
 
 settings = get_settings()
 
@@ -39,7 +42,9 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     `yield`; anything that needs to run on shutdown goes after.
     """
     log.info("Luminary backend starting (env=%s)", settings.APP_ENV)
+    start_scheduler()
     yield
+    stop_scheduler()
     log.info("Luminary backend shutting down")
 
 
@@ -68,3 +73,5 @@ app.include_router(feedback_router, prefix="/api/feedback", tags=["feedback"])
 app.include_router(memory_router, prefix="/api/memory", tags=["memory"])
 app.include_router(preferences_router, prefix="/api/preferences", tags=["preferences"])
 app.include_router(recommendations_router, prefix="/api/recommendations", tags=["recommendations"])
+app.include_router(cross_media_router, prefix="/api/recommendations", tags=["cross-media"])
+app.include_router(digest_router, prefix="/api/digest", tags=["digest"])

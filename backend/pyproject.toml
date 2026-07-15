@@ -22,6 +22,7 @@ dependencies = [
     "python-multipart>=0.0.12",
     "anthropic>=0.39",          # primary LLM provider
     "openai>=1.54",             # fallback LLM provider
+    "apscheduler>=3.10",        # weekly digest scheduler
 ]
 
 [project.optional-dependencies]

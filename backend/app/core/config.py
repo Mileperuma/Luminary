@@ -45,6 +45,14 @@ class Settings(BaseSettings):
     # --- CORS ---
     CORS_ORIGINS: str = "http://localhost:5173"
 
+    # --- Email (weekly digest) ---
+    SMTP_HOST: str | None = None
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: str | None = None
+    DIGEST_FROM_EMAIL: str = "no-reply@luminary.local"
+    DIGEST_ENABLED: bool = False   # off by default; enable in production only
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
